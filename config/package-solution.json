@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "Branch Directory",
+    "id": "1e05e8a5-de7c-4be2-ad07-8f585ded1c0a",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.19.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "Branch Directory"
+      },
+      "longDescription": {
+        "default": "Reads data from the Reece Locations SharePoint list to provide users with information about a given location."
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "Branch Directory",
+        "description": "Enables the branch directory web part.",
+        "id": "5cd9a6c1-0115-4266-8363-4c900a391b0f",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/branch-search.sppkg"
+  }
+}
