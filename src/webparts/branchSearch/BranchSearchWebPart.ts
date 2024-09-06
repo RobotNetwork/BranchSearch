@@ -19,32 +19,53 @@ export interface ISPLists {
     value: ISPList[];
 }
 
+// export interface ISPList {
+//     Title: string; // branch number
+//     field_3: string; // division
+//     field_4: string; // region
+//     field_5: string; // manager
+//     field_6: string; // address
+//     field_7: string; // city
+//     field_8: string; // state
+//     field_9: string; // zip code
+//     field_10: string; // phone number
+//     field_11: string; // fax number
+//     field_12: string; // emergency contact
+//     field_13: { 0: { EMail: string } }; // manager email
+//     field_14: string; // manager contact number
+//     field_15: string; // rvp
+//     field_16: string; // rvp cell
+//     field_17: string; // operating hours
+// }
+
 export interface ISPList {
     Title: string; // branch number
     field_3: string; // division
     field_4: string; // region
     field_5: string; // manager
     field_6: string; // address
-    field_7: string; // city
-    field_8: string; // state
-    field_9: string; // zip code
-    field_10: string; // phone number
-    field_11: string; // fax number
-    field_12: string; // emergency contact
-    field_13: { 0: { EMail: string } }; // manager email
-    field_14: string; // manager contact number
-    field_15: string; // rvp
-    field_16: string; // rvp cell
-    field_17: string; // operating hours
+    field_7: string; // suite
+    field_8: string; // city
+    field_9: string; // state
+    field_10: string; // zip code
+    field_11: string; // phone number
+    field_12: string; // fax number
+    field_13: string; // emergency contact
+    field_14: { 0: { EMail: string } }; // manager email
+    field_15: string; // manager contact number
+    field_16: string; // rvp
+    field_17: string; // rvp cell
+    field_19: string; // operating hours
 }
 
 export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpListItemsWebPartProps> {
+    
     private _getListData(input?: string): Promise<ISPLists> {
         let requestUrl =
-            "https://morscousa.sharepoint.com/sites/ReeceHub/_api/web/lists/GetByTitle('Reece Locations')/Items?$select=Title,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13/EMail,field_14,field_15,field_16,field_17&$expand=field_13";
+        "https://morscousa.sharepoint.com/sites/ReeceHub/_api/web/lists/GetByTitle('Locations')/Items?$select=Title,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13,field_14/EMail,field_15,field_16,field_17,field_19&$expand=field_14";
 
         if (input) {
-            const filterQuery = `&$filter=substringof('${input}', Title)`;
+            const filterQuery = `&$filter=substringof('${input}', Title) or substringof('${input}', field_8) or substringof('${input}', field_9)`;
             requestUrl += filterQuery;
         }
 
@@ -96,7 +117,7 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
 				</svg>
 				<input
 					class="${styles.inputStyle}"
-					placeholder="Search locations"
+					placeholder="Branch #, City, or State"
 					type="search"
 					id="branchSearchInput"
 				/>
@@ -131,7 +152,6 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
             });
         }, 1000);
     }
-    // add buttons next to address and phone numbers to copy to clipboard
 
     private _renderList(data: ISPLists): void {
         const html = data.value
@@ -140,8 +160,8 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
                     `
 			<div class="${styles.branchCard}">
 				<h2 class="${styles.title}">${item.Title}</h2>
-				<div>${item.field_6} ${item.field_7}, ${item.field_8} ${item.field_9}</div>
-				<div>${item.field_10 || "not found"}</div>
+				<div>${item.field_6} ${item.field_7 ? item.field_7 : ""} ${item.field_8}, ${item.field_9} ${item.field_10}</div>
+				<div>${item.field_11}</div>
 			</div>
 		`
             )
@@ -160,20 +180,20 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
             .map(
                 (item) => 
                     `
-                <div class="${styles.moreInfo}"><a href="https://morscousa.sharepoint.com/sites/ReeceHub/Lists/Reece%20Locations/AllItems.aspx?q=${this._getSearchField().value}" target="_blank">Click here</a>&nbsp;for more branch info!</div>
+                <div class="${styles.moreInfo}"><a href="https://morscousa.sharepoint.com/sites/ReeceHub/Lists/Locations/AllItems.aspx?q=${this._getSearchField().value}" target="_blank">Click here</a>&nbsp;for more branch info!</div>
 				<div class="${styles.branchData}">
 					<h2 class="${styles.title}">${item.Title}</h2>
-					<div><strong>Address:</strong> ${item.field_6} ${item.field_7}, ${
-                        item.field_8
-                    } ${item.field_9}</div>
+					<div><strong>Address:</strong> ${item.field_6} ${item.field_7 ? item.field_7 : ""} ${item.field_8}, ${
+                        item.field_9
+                    } ${item.field_10}</div>
 					<div><strong>Region:</strong> ${item.field_4}</div>
-					<div><strong>Phone:</strong> ${item.field_10}</div>
-					<div><strong>Fax:</strong> ${item.field_11}</div>
-					<div><strong>Manager:</strong> <a href="mailto:${item.field_13[0].EMail}"> ${
+					<div><strong>Phone:</strong> ${item.field_11}</div>
+					<div><strong>Fax:</strong> ${item.field_12}</div>
+					<div><strong>Manager:</strong> <a href="mailto:${item.field_14[0].EMail}"> ${
                         item.field_5
                     } </a> </div>
-					<div><strong>RVP:</strong> ${item.field_15}</div>
-					<div><strong>Hours:</strong> ${item.field_17}</div>
+					<div><strong>RVP:</strong> ${item.field_16}</div>
+					<div><strong>Hours:</strong> ${item.field_19}</div>
 					<div><strong>Emergency:</strong> ${item.field_12}</div>
 				</div>
 			`
@@ -202,14 +222,17 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
         this.domElement.innerHTML = this._getBaseHtml();
 
         this._setSearchEventListener();
-        this._getListData().then((data) => this._renderList(data)).catch((error) => {
-			console.error(error);
-		});
+        this._getListData()
+            .then((data) => 
+                this._renderList(data))
+            .catch((error) => {
+                console.error(error);
+            });
         this._setCardEventListeners();
     }
 
     protected get dataVersion(): Version {
-        return Version.parse("1.0");
+        return Version.parse("1.0.2.0");
     }
 
     protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
