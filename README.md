@@ -6,8 +6,9 @@
 ## Version history
 | Version | Date          | Comments    |
 | ------- | ------------- | ----------- |
-| 1.0     | July 11, 2024 | Initial POC |
+| 1.0     | July 11th, 2024 | Initial POC |
 | 1.0.3.0 | Sept 9th, 2024 | Reworked some logic, changed the endpoint, added additional search-by options (city, state, branch #) |
+| 1.0.4.0 | Nov 4th, 2024 | Swapped over to using a Google Sheet as the source of truth |
 
 ## Frameworks, Languages
 - [SharePoint (SPFx) Framework](https://aka.ms/spfx) (version 1.19.0)
@@ -45,8 +46,9 @@ gulp trust-dev-cert
 - Ensure that you are at the solution folder
 - In the terminal run:
   - **npm install**
+  - **npm install gulp -g**
   - **gulp serve**
-- Acquire the `src` URL for the iFrame, then update it in `BranchSearchWebPart.tsx`
+- Acquire the `document_id` for the Google Sheet. Save for later, must be input into the web part settings.
 
 ### Testing Locally
 1. By default, `gulp serve` will automatically open the URL defined by the `initialPage` property in `/config/serve.json`. For most purposes, this will work fine.
@@ -59,7 +61,7 @@ gulp trust-dev-cert
 2. Run `gulp bundle --ship` to prepare the minimized version for production
 3. Then run `gulp package-solution --ship` to create a package (.sppkg file) in the `sharepoint/solution` directory, which contains all components and assets that SharePoint needs.
 4. Navigate to SharePoint Admin Center -> More Features -> Apps -> Open
-5. Upload the `.sppkg` file to this library, then SharePoint will prompt to trust the app, asking for permissions based on the manifest
+5. Upload the `.sppkg` file to the app library, then SharePoint will prompt to trust the app, asking for permissions based on the manifest
 6. If it is a new web part, it must be deployed to insert it onto a page. Otherwise, uploading it should suffice.
 
 ### Deploy/Install (new)

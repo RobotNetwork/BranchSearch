@@ -3,7 +3,7 @@
   "solution": {
     "name": "Branch Directory",
     "id": "1e05e8a5-de7c-4be2-ad07-8f585ded1c0a",
-    "version": "1.0.2.0",
+    "version": "1.0.4.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
@@ -19,7 +19,7 @@
         "default": "Branch Directory"
       },
       "longDescription": {
-        "default": "Reads data from the Locations SharePoint list to provide users with information about a given location."
+        "default": "Reads data from the Locations Google Sheet to provide users with information about a given location."
       },
       "screenshotPaths": [],
       "videoUrl": "",
@@ -28,9 +28,9 @@
     "features": [
       {
         "title": "Branch Directory",
-        "description": "Connects to the Locations SharePoint List, allowing users to locate branch information with a simple search.",
+        "description": "Connects to the Locations Google Sheet, allowing users to locate branch information with a simple search.",
         "id": "5cd9a6c1-0115-4266-8363-4c900a391b0f",
-        "version": "1.0.2.0"
+        "version": "1.0.4.0"
       }
     ]
   },
