@@ -6,81 +6,111 @@ import {
 } from "@microsoft/sp-property-pane";
 
 import styles from "./BranchSearchWebPart.module.scss";
-// import * as strings from "BranchSearchWebPartStrings";
-
-import { SPHttpClient, SPHttpClientResponse } from "@microsoft/sp-http";
-// import { Environment, EnvironmentType } from "@microsoft/sp-core-library";
 
 export interface IGetSpListItemsWebPartProps {
     description: string;
 }
 
-export interface ISPLists {
-    value: ISPList[];
+interface GoogleSheetLists {
+    value: GoogleSheetList[];
 }
 
-// export interface ISPList {
-//     Title: string; // branch number
-//     field_3: string; // division
-//     field_4: string; // region
-//     field_5: string; // manager
-//     field_6: string; // address
-//     field_7: string; // city
-//     field_8: string; // state
-//     field_9: string; // zip code
-//     field_10: string; // phone number
-//     field_11: string; // fax number
-//     field_12: string; // emergency contact
-//     field_13: { 0: { EMail: string } }; // manager email
-//     field_14: string; // manager contact number
-//     field_15: string; // rvp
-//     field_16: string; // rvp cell
-//     field_17: string; // operating hours
-// }
-
-export interface ISPList {
-    Title: string; // branch number
-    field_3: string; // division
-    field_4: string; // region
-    field_5: string; // manager
-    field_6: string; // address
-    field_7: string; // suite
-    field_8: string; // city
-    field_9: string; // state
-    field_10: string; // zip code
-    field_11: string; // phone number
-    field_12: string; // fax number
-    field_13: string; // emergency contact
-    field_14: { 0: { EMail: string } }; // manager email
-    field_15: string; // manager contact number
-    field_16: string; // rvp
-    field_17: string; // rvp cell
-    field_19: string; // operating hours
+interface GoogleSheetList {
+    locationCode: number;
+    locationName: string;
+    brand: string;
+    division: string;
+    region: string;
+    manager: string;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    phone: string;
+    fax: string;
+    emergency: string;
+    branchManagerEmail: string;
+    branchManagerPhoneNumber: string;
+    rvp: string;
+    rvpPhoneNumber: string;
+    president: string;
+    locationAttributes: string;
+    plumbing: string;
+    waterworks: string;
+    hvac: string;
+    bK: string;
+    headquarters: string;
+    gmtOffset: string;
+    daylightSavingsTime: string;
+    customerFacing: string;
 }
 
 export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpListItemsWebPartProps> {
-    
-    private _getListData(input?: string): Promise<ISPLists> {
-        let requestUrl =
-        "https://morscousa.sharepoint.com/sites/ReeceHub/_api/web/lists/GetByTitle('Locations')/Items?$select=Title,field_3,field_4,field_5,field_6,field_7,field_8,field_9,field_10,field_11,field_12,field_13,field_14/EMail,field_15,field_16,field_17,field_19&$expand=field_14";
+    private _getListData(input?: string): Promise<GoogleSheetList[]> {
+        
+        const sheetUrl = `https://docs.google.com/spreadsheets/d/${this.properties.description}/gviz/tq?tqx=out:json`;
+        return fetch(sheetUrl)
+            .then((response) => response.text()) // Read as plain text
+            .then((text) => {
+                // Remove the unnecessary prefix "google.visualization.Query.setResponse("
+                const json = JSON.parse(text.substring(47, text.length - 2));
 
-        if (input) {
-            const filterQuery = `&$filter=substringof('${input}', Title) or substringof('${input}', field_8) or substringof('${input}', field_9)`;
-            requestUrl += filterQuery;
-        }
+                const rows = json.table.rows.map(
+                    (row: { c: { v: string | number }[] }) => ({
+                        locationCode: row.c[0]?.v || null,
+                        locationName: row.c[1]?.v || "",
+                        brand: row.c[2]?.v || "",
+                        division: row.c[3]?.v || "",
+                        region: row.c[4]?.v || "",
+                        manager: row.c[5]?.v || "",
+                        addressLine1: row.c[6]?.v || "",
+                        addressLine2: row.c[7]?.v || "",
+                        city: row.c[8]?.v || "",
+                        state: row.c[9]?.v || "",
+                        zipCode: row.c[10]?.v || null,
+                        phone: row.c[11]?.v || "",
+                        fax: row.c[12]?.v || "",
+                        emergency: row.c[13]?.v || "",
+                        branchManagerEmail: row.c[14]?.v || "",
+                        branchManagerPhoneNumber: row.c[15]?.v || "",
+                        rvp: row.c[16]?.v || "",
+                        rvpPhoneNumber: row.c[17]?.v || "",
+                        president: row.c[18]?.v || "",
+                        locationAttributes: row.c[19]?.v || "",
+                        plumbing: row.c[20]?.v || "",
+                        waterworks: row.c[21]?.v || "",
+                        hvac: row.c[22]?.v || "",
+                        bK: row.c[23]?.v || "",
+                        headquarters: row.c[24]?.v || "",
+                        gmtOffset: row.c[25]?.v || null,
+                        daylightSavingsTime: row.c[26]?.v || "",
+                        customerFacing: row.c[27]?.v || "",
+                    })
+                );
 
-        return this.context.spHttpClient
-            .get(requestUrl, SPHttpClient.configurations.v1)
-            .then((response: SPHttpClientResponse) => {
-                return response.json();
+                if (!input) return rows;
+
+                return rows.filter(
+                    (item: {
+                        locationCode: number;
+                        city: string;
+                        state: string;
+                    }) =>
+                        item.locationCode === Number(input) ||
+                        item.city.toLowerCase() === input.toLowerCase() ||
+                        item.state.toLowerCase() === input.toLowerCase()
+                );
             })
-            .catch((error) => {
-                console.error(error);
-            });
+            .catch((error) =>
+                console.error("Error fetching data from Google Sheets: ", error)
+            );
     }
 
     private _getSearchField(): HTMLInputElement {
-        const ele = this.domElement.querySelector("#branchSearchInput") as HTMLInputElement;
+        const ele = this.domElement.querySelector(
+            "#branchSearchInput"
+        ) as HTMLInputElement;
         return ele;
     }
 
@@ -143,7 +173,7 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
                     const branchNumber = card.innerText.split("\n")[0];
                     this._getListData(branchNumber)
                         .then((data) => {
-                            this._renderBranchData(data);
+                            this._renderBranchData({ value: data });
                         })
                         .catch((error) => {
                             console.error(error);
@@ -153,15 +183,17 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
         }, 1000);
     }
 
-    private _renderList(data: ISPLists): void {
+    private _renderList(data: GoogleSheetLists): void {
         const html = data.value
             .map(
                 (item) =>
                     `
 			<div class="${styles.branchCard}">
-				<h2 class="${styles.title}">${item.Title}</h2>
-				<div>${item.field_6} ${item.field_7 ? item.field_7 : ""} ${item.field_8}, ${item.field_9} ${item.field_10}</div>
-				<div>${item.field_11}</div>
+				<h2 class="${styles.title}">${item.locationCode}</h2>
+				<div>${item.addressLine1} ${item.addressLine2 ? item.addressLine2 : ""} ${item.city}, ${
+                        item.state
+                    } ${item.zipCode}</div>
+				<div>${item.phone}</div>
 			</div>
 		`
             )
@@ -170,31 +202,30 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
         this._setCardEventListeners();
     }
 
-    private _renderBranchData(data: ISPLists): void {
-
+    private _renderBranchData(data: GoogleSheetLists): void {
         data.value.map((item) => {
-            this._getSearchField().value = item.Title;
+            this._getSearchField().value = item.locationCode.toString();
         });
 
         const html = data.value
             .map(
-                (item) => 
+                (item) =>
                     `
-                <div class="${styles.moreInfo}"><a href="https://morscousa.sharepoint.com/sites/ReeceHub/Lists/Locations/AllItems.aspx?q=${this._getSearchField().value}" target="_blank">Click here</a>&nbsp;for more branch info!</div>
+                <div class="${
+                    styles.moreInfo
+                }"><a href="https://docs.google.com/spreadsheets/d/${this.properties.description}" target="_blank">Click here</a>&nbsp;for all branch info!</div>
 				<div class="${styles.branchData}">
-					<h2 class="${styles.title}">${item.Title}</h2>
-					<div><strong>Address:</strong> ${item.field_6} ${item.field_7 ? item.field_7 : ""} ${item.field_8}, ${
-                        item.field_9
-                    } ${item.field_10}</div>
-					<div><strong>Region:</strong> ${item.field_4}</div>
-					<div><strong>Phone:</strong> ${item.field_11}</div>
-					<div><strong>Fax:</strong> ${item.field_12}</div>
-					<div><strong>Manager:</strong> <a href="mailto:${item.field_14[0].EMail}"> ${
-                        item.field_5
-                    } </a> </div>
-					<div><strong>RVP:</strong> ${item.field_16}</div>
-					<div><strong>Hours:</strong> ${item.field_19}</div>
-					<div><strong>Emergency:</strong> ${item.field_12}</div>
+					<h2 class="${styles.title}">${item.locationCode}</h2>
+					<div><strong>Address:</strong> ${item.addressLine1} ${
+                        item.addressLine2 ? item.addressLine2 : ""
+                    } ${item.city}, ${item.state} ${item.zipCode}</div>
+					<div><strong>Region:</strong> ${item.region}</div>
+					<div><strong>Phone:</strong> ${item.phone}</div>
+					<div><strong>Fax:</strong> ${item.fax}</div>
+					<div><strong>Manager:</strong> ${item.manager} </div>
+					<div><strong>RVP:</strong> ${item.rvp}</div>
+					<div><strong>Hours:</strong> ${item.locationAttributes}</div>
+					<div><strong>Emergency:</strong> ${item.emergency}</div>
 				</div>
 			`
             )
@@ -210,7 +241,7 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
             searchInput.addEventListener("input", () => {
                 const branchNumber = searchInput.value;
                 this._getListData(branchNumber)
-                    .then((data) => this._renderList(data))
+                    .then((data) => this._renderList({ value: data }))
                     .catch((error) => {
                         console.error(error);
                     });
@@ -223,8 +254,7 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
 
         this._setSearchEventListener();
         this._getListData()
-            .then((data) => 
-                this._renderList(data))
+            .then((data) => this._renderList({ value: data }))
             .catch((error) => {
                 console.error(error);
             });
@@ -240,14 +270,13 @@ export default class GetSpListItemsWebPart extends BaseClientSideWebPart<IGetSpL
             pages: [
                 {
                     header: {
-                        description: "Basic description",
+                        description: "Settings",
                     },
                     groups: [
                         {
-                            groupName: "Group Name",
                             groupFields: [
                                 PropertyPaneTextField("description", {
-                                    label: "Description",
+                                    label: "Google Sheet ID",
                                 }),
                             ],
                         },
